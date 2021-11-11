@@ -26,6 +26,7 @@ var
     game_image: Image
     seed: int4
 
+
 def painting()
     paint_coords = (int2(get_mouse_position()) - paint_offs) / fix_size
     if get_mouse_button_down(MB_LEFT) && paint_coords.x >= 0 && paint_coords.x < init_buf_size.x && paint_coords.y >=0 && paint_coords.y < init_buf_size.y
@@ -49,6 +50,7 @@ def painting_draw()
         let pixelCoords = paint_offs + paint_coords * fix_size + int2(1)
         fill_rect(pixelCoords.x, pixelCoords.y, fix_size-1, fix_size-1, cur_pix_color)
 
+
 def init_game_image()
     let imgSz = int2(game_image.width, game_image.height)
     resize(game_buffer, game_image.width * game_image.height)
@@ -68,6 +70,7 @@ def init_game_image()
             let y = idx / init_buf_size.x + offs.y
             game_buffer[y * imgSz.x + x] = init_buffer[idx]
 
+
 def game_of_life()
     let imgSz = int2(game_image.width, game_image.height)
     // game of life rules
@@ -86,11 +89,13 @@ def game_of_life()
         let y = idx / imgSz.x
         set_pixel(game_image, x, y, game_buffer[idx] ? fill_pix_color : 0x000000)
 
+
 def game_of_life_draw()
     let w = get_screen_width()
     let h = get_screen_height()
     let imgSz = int2(game_image.width, game_image.height) * image_scale_factor
     draw_image(game_image, (w - imgSz.x) / 2, (h - imgSz.y) / 2, 0xffffff, imgSz)
+
 
 // 'initialize' runs once when game starts and every hot-reload
 [export]
@@ -114,6 +119,7 @@ def initialize
 
 var
     fps = 0f
+
 
 // this function is called to update game data,
 // dt - time elapsed since the previous update (in seconds)
@@ -140,6 +146,7 @@ def act(dt: float)
         game_of_life()
     fps = 1f / dt
     return
+
 
 // this function will be called every frame after 'act',
 // you can draw anything in this function
