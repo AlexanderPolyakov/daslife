@@ -13,9 +13,11 @@ let
     cur_pix_color = 0x80aaaa00
     fill_pix_color = 0x800000
     fix_size = 10
+    image_scale_factor = 2
 
 var
     state = GameState Painting
+    fill_mode = false
     init_buf_size: int2
     paint_offs: int2
     paint_coords: int2
@@ -52,11 +54,19 @@ def init_game_image()
     resize(game_buffer, game_image.width * game_image.height)
     for idx in range(length(game_buffer))
         game_buffer[idx] = false
-    let offs = (imgSz - init_buf_size) / 2
-    for idx in range(length(init_buffer))
-        let x = idx % init_buf_size.x + offs.x
-        let y = idx / init_buf_size.x + offs.y
-        game_buffer[y * imgSz.x + x] = init_buffer[idx]
+    if fill_mode
+        for idx in range(length(game_buffer))
+            let x = idx % imgSz.x
+            let y = idx / imgSz.x
+            let xOrig = x % init_buf_size.x
+            let yOrig = y % init_buf_size.y
+            game_buffer[y * imgSz.x + x] = init_buffer[yOrig * init_buf_size.x + xOrig]
+    else
+        let offs = (imgSz - init_buf_size) / 2
+        for idx in range(length(init_buffer))
+            let x = idx % init_buf_size.x + offs.x
+            let y = idx / init_buf_size.x + offs.y
+            game_buffer[y * imgSz.x + x] = init_buffer[idx]
 
 def game_of_life()
     let imgSz = int2(game_image.width, game_image.height)
@@ -79,7 +89,8 @@ def game_of_life()
 def game_of_life_draw()
     let w = get_screen_width()
     let h = get_screen_height()
-    draw_image(game_image, (w - game_image.width) / 2, (h - game_image.height) / 2)
+    let imgSz = int2(game_image.width, game_image.height) * image_scale_factor
+    draw_image(game_image, (w - imgSz.x) / 2, (h - imgSz.y) / 2, 0xffffff, imgSz)
 
 // 'initialize' runs once when game starts and every hot-reload
 [export]
@@ -120,6 +131,8 @@ def act(dt: float)
     if get_key_press(VK_R)
         for idx in range(length(init_buffer))
             init_buffer[idx] = random_float(seed) > 0.5
+    if get_key_press(VK_F)
+        fill_mode = !fill_mode
 
     if state == GameState Painting
         painting()
@@ -141,4 +154,6 @@ def draw
     text_out(20, 20, "game state is {state}", 0xffffff)
     text_out(20, 40, "fps is {int(fps)} for img {game_image.width}x{game_image.height}", 0xffffff)
     text_out(20, 60, "Press space to toggle cell state, click to paint, c to clear, r for random", 0xffffff)
+    let nextFillMode = fill_mode ? "once" : "fill"
+    text_out(20, 80, "f to toggle fill mode to {nextFillMode}", 0xffffff)
     return
