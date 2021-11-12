@@ -8,10 +8,10 @@ enum GameState
 
 
 let
-    bg_color = 0x000000
-    grid_color = 0xaaaaaa
+    bg_color = 0xff000000
+    grid_color = 0xffaaaaaa
     cur_pix_color = 0x80aaaa00
-    fill_pix_color = 0x800000
+    fill_pix_color = 0xff800000
     fix_size = 10
     image_scale_factor = 2
 
@@ -87,14 +87,24 @@ def game_of_life()
     for idx in range(length(game_buffer))
         let x = idx % imgSz.x
         let y = idx / imgSz.x
-        set_pixel(game_image, x, y, game_buffer[idx] ? fill_pix_color : 0x000000)
+        set_pixel(game_image, x, y, game_buffer[idx] ? fill_pix_color : 0x0000000)
 
+def bloom_image(im, pos, sz)
+    let bloomKernel = [[uint[5*5] 1u; 2u; 2u; 2u; 1u;
+                                  1u; 2u; 3u; 2u; 1u;
+                                  2u; 3u; 15u; 3u; 2u;
+                                  1u; 2u; 3u; 2u; 1u;
+                                  1u; 2u; 2u; 2u; 1u]]
+    for x in range(5)
+        for y in range(5)
+            draw_image(im, pos.x+x-2, pos.y+y-2, bloomKernel[y*5+x] * 0x10000000 + 0x00ffffff, sz)
 
 def game_of_life_draw()
     let w = get_screen_width()
     let h = get_screen_height()
     let imgSz = int2(game_image.width, game_image.height) * image_scale_factor
-    draw_image(game_image, (w - imgSz.x) / 2, (h - imgSz.y) / 2, 0xffffff, imgSz)
+    let pos = int2((w - imgSz.x) / 2, (h - imgSz.y) / 2)
+    bloom_image(game_image, pos, imgSz)
 
 
 // 'initialize' runs once when game starts and every hot-reload
@@ -152,15 +162,16 @@ def act(dt: float)
 // you can draw anything in this function
 [export]
 def draw
+    enable_alpha_blend()
     let w = float(get_screen_width())
     let h = float(get_screen_height())
     if state == GameState Painting
         painting_draw()
     else
         game_of_life_draw()
-    text_out(20, 20, "game state is {state}", 0xffffff)
-    text_out(20, 40, "fps is {int(fps)} for img {game_image.width}x{game_image.height}", 0xffffff)
-    text_out(20, 60, "Press space to toggle cell state, click to paint, c to clear, r for random", 0xffffff)
+    text_out(20, 20, "game state is {state}", 0xffffffff)
+    text_out(20, 40, "fps is {int(fps)} for img {game_image.width}x{game_image.height}", 0xffffffff)
+    text_out(20, 60, "Press space to toggle cell state, click to paint, c to clear, r for random", 0xffffffff)
     let nextFillMode = fill_mode ? "once" : "fill"
-    text_out(20, 80, "f to toggle fill mode to {nextFillMode}", 0xffffff)
+    text_out(20, 80, "f to toggle fill mode to {nextFillMode}", 0xffffffff)
     return
